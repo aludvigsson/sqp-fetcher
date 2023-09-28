@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Amazon SQP Fetcher</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            width: 400px;  /* Set to your desired width */
+            height: 300px;  /* Set to your desired height */
+        }
+        label {
+            font-weight: bold;
+        }
+        input[type="text"] {
+            padding: 10px;
+            margin-top: 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 20px;
+            margin-top: 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #progressContainer {
+            width: 100%;  /* Set to your desired width */
+            height: 20px;  /* Set to your desired height */
+            background-color: #ccc;  /* Add a background to make it visible */
+        }
+        #progressBar {
+            width: 0;
+            height: 100%;
+            background-color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+<h1>Amazon SQP Fetcher</h1>
+<p>Keep this window open when the fetching is in progress - Otherwise it will fail.</p>
+<label for="asinInput">Enter ASIN:</label>
+<input type="text" id="asinInput" name="asinInput">
+<button id="fetchData">Fetch Data</button>
+<div id="progressWrapper">
+    <label for="progressBar">Progress:</label>
+    <div id="progressContainer">
+        <div id="progressBar"></div>
+    </div>
+    <div id="progressText"></div>
+
+</div>
+<script src="popup.js"></script>
+</body>
+</html>
