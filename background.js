@@ -3,7 +3,8 @@ const columnMapping = {
     "qp-asin-query": "Search Query",
     "qp-asin-query-rank": "Search Query Score",
     "qp-asin-query-volume": "Search Query Volume",
-    "qp-asin-count-impressions": "Impressions: Total Count",
+    "qp-asin-impressions": "Impressions: Total Count",
+    "qp-asin-count-impressions": "Impressions: ASIN Count",
     "qp-asin-share-impressions": "Impressions: ASIN Share %",
     "qp-asin-clicks": "Clicks: Total Count",
     "qp-click-rate": "Clicks: Click Rate %",
@@ -31,7 +32,8 @@ const columnMapping = {
     "qp-asin-median-price-purchases": "Purchases: ASIN Price (Median)",
     "qp-asin-same-day-shipping-purchases": "Purchases: Same Day Shipping Speed",
     "qp-asin-one-day-shipping-purchases": "Purchases: 1D Shipping Speed",
-    "qp-asin-two-day-shipping-purchases": "Purchases: 2D Shipping Speed"
+    "qp-asin-two-day-shipping-purchases": "Purchases: 2D Shipping Speed",
+    "week": "Week"
 };
 
 
