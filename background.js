@@ -1,4 +1,39 @@
 let allCSVData = [];
+const columnMapping = {
+    "qp-asin-query": "Search Query",
+    "qp-asin-query-rank": "Search Query Score",
+    "qp-asin-query-volume": "Search Query Volume",
+    "qp-asin-count-impressions": "Impressions: Total Count",
+    "qp-asin-share-impressions": "Impressions: ASIN Share %",
+    "qp-asin-clicks": "Clicks: Total Count",
+    "qp-click-rate": "Clicks: Click Rate %",
+    "qp-asin-count-clicks": "Clicks: ASIN Count",
+    "qp-asin-share-clicks": "Clicks: ASIN Share %",
+    "qp-asin-median-query-price-clicks": "Clicks: Price (Median)",
+    "qp-asin-median-price-clicks": "Clicks: ASIN Price (Median)",
+    "qp-asin-same-day-shipping-clicks": "Clicks: Same Day Shipping Speed",
+    "qp-asin-one-day-shipping-clicks": "Clicks: 1D Shipping Speed",
+    "qp-asin-two-day-shipping-clicks": "Clicks: 2D Shipping Speed",
+    "qp-asin-cart-adds": "Cart Adds: Total Count",
+    "qp-asin-cart-add-rate": "Cart Adds: Cart Add Rate %",
+    "qp-asin-count-cart-adds": "Cart Adds: ASIN Count",
+    "qp-asin-share-cart-adds": "Cart Adds: ASIN Share %",
+    "qp-asin-median-query-price-cart-adds": "Cart Adds: Price (Median)",
+    "qp-asin-median-price-cart-adds": "Cart Adds: ASIN Price (Median)",
+    "qp-asin-same-day-shipping-cart-adds": "Cart Adds: Same Day Shipping Speed",
+    "qp-asin-one-day-shipping-cart-adds": "Cart Adds: 1D Shipping Speed",
+    "qp-asin-two-day-shipping-cart-adds": "Cart Adds: 2D Shipping Speed",
+    "qp-asin-purchases": "Purchases: Total Count",
+    "qp-asin-purchase-rate": "Purchases: Purchase Rate %",
+    "qp-asin-count-purchases": "Purchases: ASIN Count",
+    "qp-asin-share-purchases": "Purchases: ASIN Share %",
+    "qp-asin-median-query-price-purchases": "Purchases: Price (Median)",
+    "qp-asin-median-price-purchases": "Purchases: ASIN Price (Median)",
+    "qp-asin-same-day-shipping-purchases": "Purchases: Same Day Shipping Speed",
+    "qp-asin-one-day-shipping-purchases": "Purchases: 1D Shipping Speed",
+    "qp-asin-two-day-shipping-purchases": "Purchases: 2D Shipping Speed"
+};
+
 
 // Function to get current week number
 function getWeekNumber(d) {
@@ -74,17 +109,27 @@ async function fetchAllData(asin) {
             currentWeek: currentWeek,
             totalWeeks: totalWeeks
         });
+
+
         console.log(`Sent progress: ${(currentWeek / totalWeeks) * 100}%`);
 
         startDate.setDate(startDate.getDate() + 7);
 
 
     }
-    const header = Object.keys(allCSVData[0]).join(',');
-    const csvRows = allCSVData.map(row => Object.values(row).join(','));
-    csvRows.unshift(header);
-    const csvData = csvRows.join('\n');
 
+    const orderedApiNames = Object.keys(columnMapping);
+
+    // Use the ordered API names to rearrange each row
+    const reorderedRows = allCSVData.map(row => {
+        return orderedApiNames.map(name => row[name] || '').join(',');
+    });
+
+    // Use the real header names in the CSV
+    const realHeaderNames = Object.values(columnMapping).join(',');
+    reorderedRows.unshift(realHeaderNames);
+
+    const csvData = reorderedRows.join('\n');
     chrome.runtime.sendMessage({type: "CSV_DATA", payload: csvData});
 
 }
