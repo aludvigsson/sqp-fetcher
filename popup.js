@@ -1,8 +1,9 @@
 document.getElementById('fetchData').addEventListener('click', function() {
     const asin = document.getElementById('asinInput').value;
-    chrome.runtime.sendMessage({action: 'fetchData', asin: asin});
+    const startDate = document.getElementById('startDateInput').value;
+    const endDate = document.getElementById('endDateInput').value;
+    chrome.runtime.sendMessage({action: 'fetchData', asin, startDate, endDate});
 });
-
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "CSV_DATA") {
         downloadCSV(message.payload);

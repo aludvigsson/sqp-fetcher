@@ -49,10 +49,17 @@ const startDate = new Date("2023-01-01");
 
 function jsonToCSV(jsonData, week) {
     const rows = jsonData.reportsV2[0].rows;
-    rows.forEach(row => row['week'] = week);
+    rows.forEach(row => {
+        row['week'] = week;
+
+        // Wrap 'Search Query' in quotes if it contains a comma
+        if (row['qp-asin-query'].includes(',')) {
+            row['qp-asin-query'] = `"${row['qp-asin-query']}"`;
+        }
+    });
+
     rows.sort((a, b) => parseInt(a['qp-asin-query-rank']) - parseInt(b['qp-asin-query-rank']));
     allCSVData.push(...rows);
-
 }
 
 async function fetchData(asin, weekEndDate) {
@@ -96,12 +103,16 @@ async function fetchData(asin, weekEndDate) {
 
 async function fetchAllData(asin) {
 
-    let currentWeek = 0; // Initialize current week to 0
-    const totalWeeks = currentWeekNumber - 1; // Define totalWeeks as currentWeekNumber - 1
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const totalWeeks = Math.ceil((end - start) / (7 * 24 * 60 * 60 * 1000));
 
-    for (let i = 1; i < currentWeekNumber; i++) {  //
-        const weekEndDate = new Date(startDate);
-        weekEndDate.setDate(startDate.getDate() + 6);
+    let currentWeek = 0;  // Initialize to 0 as we're counting from the startDate
+    let currentStartDate = new Date(startDate);  // Initialize to the provided startDate
+
+    for (let i = 0; i < totalWeeks; i++) {
+        const weekEndDate = new Date(currentStartDate);
+        weekEndDate.setDate(currentStartDate.getDate() + 6);
         const weekEndStr = `${weekEndDate.getFullYear()}-${String(weekEndDate.getMonth() + 1).padStart(2, '0')}-${String(weekEndDate.getDate()).padStart(2, '0')}`;
         await fetchData(asin, weekEndStr);
         currentWeek++;
@@ -111,14 +122,9 @@ async function fetchAllData(asin) {
             currentWeek: currentWeek,
             totalWeeks: totalWeeks
         });
-
-
-        console.log(`Sent progress: ${(currentWeek / totalWeeks) * 100}%`);
-
-        startDate.setDate(startDate.getDate() + 7);
-
-
+        currentStartDate.setDate(currentStartDate.getDate() + 7);
     }
+
 
     const orderedApiNames = Object.keys(columnMapping);
 
@@ -138,7 +144,7 @@ async function fetchAllData(asin) {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'fetchData') {
-        const asin = message.asin;
-        fetchAllData(asin);
+        const { asin, startDate, endDate } = message;
+        fetchAllData(asin, startDate, endDate);
     }
 });

@@ -6,13 +6,16 @@
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
-            width: 400px;  /* Set to your desired width */
-            height: 300px;  /* Set to your desired height */
+            width: 400px;
+            height: auto;
         }
         label {
             font-weight: bold;
+            display: inline-block;
+            width: 150px;
+            margin-top: 10px;
         }
-        input[type="text"] {
+        input[type="text"], input[type="date"], input[type="number"] {
             padding: 10px;
             margin-top: 10px;
             width: 100%;
@@ -29,11 +32,11 @@
         button:hover {
             background-color: #45a049;
         }
-
         #progressContainer {
-            width: 100%;  /* Set to your desired width */
-            height: 20px;  /* Set to your desired height */
-            background-color: #ccc;  /* Add a background to make it visible */
+            width: 100%;
+            height: 20px;
+            background-color: #ccc;
+            margin-top: 20px;
         }
         #progressBar {
             width: 0;
@@ -47,6 +50,10 @@
 <p>Keep this window open when the fetching is in progress - Otherwise it will fail.</p>
 <label for="asinInput">Enter ASIN:</label>
 <input type="text" id="asinInput" name="asinInput">
+<label for="startDateInput">Start Date:</label>
+<input type="date" id="startDateInput" name="startDateInput">
+<label for="endDateInput">End Date:</label>
+<input type="date" id="endDateInput" name="endDateInput">
 <button id="fetchData">Fetch Data</button>
 <div id="progressWrapper">
     <label for="progressBar">Progress:</label>
@@ -54,7 +61,6 @@
         <div id="progressBar"></div>
     </div>
     <div id="progressText"></div>
-
 </div>
 <script src="popup.js"></script>
 </body>
