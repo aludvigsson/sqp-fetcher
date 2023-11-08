@@ -101,7 +101,7 @@ async function fetchData(asin, weekEndDate) {
     await new Promise(resolve => setTimeout(resolve, Math.random() * 6000 + 1000));
 }
 
-async function fetchAllData(asin) {
+async function fetchAllData(asin, startDate, endDate) {
 
     const start = new Date(startDate);
     const end = new Date(endDate);

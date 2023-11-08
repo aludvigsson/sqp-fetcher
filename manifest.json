@@ -3,7 +3,13 @@
   "name": "AMZ SQP Fetcher",
   "version": "1.0",
   "description": "Fetches data from Search Query Perfomance and downloads it as a CSV.",
-  "permissions": ["activeTab", "storage", "http://*/*", "https://*/*"],
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": ["<all_urls>"],
+
+
   "background": {
     "service_worker": "background.js"
   },
