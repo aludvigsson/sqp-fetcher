@@ -138,7 +138,7 @@ async function fetchAllData(asin, startDate, endDate) {
     reorderedRows.unshift(realHeaderNames);
 
     const csvData = reorderedRows.join('\n');
-    chrome.runtime.sendMessage({type: "CSV_DATA", payload: csvData});
+    chrome.runtime.sendMessage({type: "CSV_DATA", payload: csvData, startDate: startDate, endDate: endDate, ASIN: asin});
 
 }
 
