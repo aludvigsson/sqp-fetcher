@@ -62,7 +62,8 @@ function jsonToCSV(jsonData, week) {
     allCSVData.push(...rows);
 }
 
-async function fetchData(asin, weekEndDate) {
+async function fetchData(asin, weekEndDate, marketplace) {
+    console.log(marketplace);
     const payload = {
         viewId: "query-performance-asin-view",
         filterSelections: [
@@ -70,7 +71,7 @@ async function fetchData(asin, weekEndDate) {
             { id: "reporting-range", value: "weekly", valueType: null },
             { id: "weekly-week", value: weekEndDate, valueType: "weekly" }
         ],
-        selectedCountries: ["us"],
+        selectedCountries: [marketplace.toLowerCase()],
         reportId: "query-performance-asin-report-table",
         reportOperations: [
             {
@@ -84,7 +85,22 @@ async function fetchData(asin, weekEndDate) {
         ],
     };
 
-    await fetch('https://sellercentral.amazon.com/api/brand-analytics/v1/dashboard/query-performance/reports', {
+    let baseUrl = 'https://sellercentral.amazon.';
+    switch (marketplace) {
+        case 'UK':
+            baseUrl += 'co.uk';
+            break;
+        case 'DE':
+            baseUrl += 'de';
+            break;
+        case 'US':
+        default:
+            baseUrl += 'com';
+    }
+
+    const url = `${baseUrl}/api/brand-analytics/v1/dashboard/query-performance/reports`;
+
+    await fetch(url, {
         method: 'POST',
         headers: {
             'accept': 'application/json',
@@ -101,7 +117,7 @@ async function fetchData(asin, weekEndDate) {
     await new Promise(resolve => setTimeout(resolve, Math.random() * 6000 + 1000));
 }
 
-async function fetchAllData(asin, startDate, endDate) {
+async function fetchAllData(asin, startDate, endDate, marketplace) {
 
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -114,7 +130,7 @@ async function fetchAllData(asin, startDate, endDate) {
         const weekEndDate = new Date(currentStartDate);
         weekEndDate.setDate(currentStartDate.getDate() + 6);
         const weekEndStr = `${weekEndDate.getFullYear()}-${String(weekEndDate.getMonth() + 1).padStart(2, '0')}-${String(weekEndDate.getDate()).padStart(2, '0')}`;
-        await fetchData(asin, weekEndStr);
+        await fetchData(asin, weekEndStr, marketplace);
         currentWeek++;
         chrome.runtime.sendMessage({
             type: "UPDATE_PROGRESS",
@@ -144,7 +160,7 @@ async function fetchAllData(asin, startDate, endDate) {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'fetchData') {
-        const { asin, startDate, endDate } = message;
-        fetchAllData(asin, startDate, endDate);
+        const { asin, startDate, endDate, marketplace } = message;
+        fetchAllData(asin, startDate, endDate, marketplace);
     }
 });
