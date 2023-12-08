@@ -123,14 +123,23 @@ async function fetchAllData(asin, startDate, endDate, marketplace) {
     const end = new Date(endDate);
     const totalWeeks = Math.ceil((end - start) / (7 * 24 * 60 * 60 * 1000));
 
-    let currentWeek = 0;  // Initialize to 0 as we're counting from the startDate
-    let currentStartDate = new Date(startDate);  // Initialize to the provided startDate
+    let currentWeek = 0;
+    let currentStartDate = new Date(startDate);
 
     for (let i = 0; i < totalWeeks; i++) {
+        // Calculate the end date of the week (Saturday)
         const weekEndDate = new Date(currentStartDate);
-        weekEndDate.setDate(currentStartDate.getDate() + 6);
+        const dayOfWeek = weekEndDate.getDay(); // Sunday = 0, Monday = 1, ..., Saturday = 6
+        const daysToAdd = 6 - dayOfWeek; // Number of days to add to reach Saturday
+        weekEndDate.setDate(currentStartDate.getDate() + daysToAdd);
+
+        // Format the week's end date into a string
         const weekEndStr = `${weekEndDate.getFullYear()}-${String(weekEndDate.getMonth() + 1).padStart(2, '0')}-${String(weekEndDate.getDate()).padStart(2, '0')}`;
+
+        // Fetch data for the week
         await fetchData(asin, weekEndStr, marketplace);
+
+        // Update progress
         currentWeek++;
         chrome.runtime.sendMessage({
             type: "UPDATE_PROGRESS",
@@ -138,6 +147,8 @@ async function fetchAllData(asin, startDate, endDate, marketplace) {
             currentWeek: currentWeek,
             totalWeeks: totalWeeks
         });
+
+        // Move to the start of the next week
         currentStartDate.setDate(currentStartDate.getDate() + 7);
     }
 
