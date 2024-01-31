@@ -15,11 +15,18 @@
             width: 150px;
             margin-top: 10px;
         }
-        input[type="text"], input[type="date"], input[type="number"] {
+        input[type="date"] {
             padding: 10px;
             margin-top: 10px;
             width: 100%;
             box-sizing: border-box;
+        }
+        textarea {
+            padding: 10px;
+            margin-top: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            height: 100px; /* Adjust height as needed */
         }
         button {
             padding: 10px 20px;
@@ -48,8 +55,8 @@
 <body>
 <h1>Amazon SQP Fetcher</h1>
 <p>Keep this window open when the fetching is in progress - Otherwise it will fail.</p>
-<label for="asinInput">Enter ASIN:</label>
-<input type="text" id="asinInput" name="asinInput">
+<label for="asinInput">Enter ASIN(s):</label>
+<textarea id="asinInput" name="asinInput"></textarea>
 <label for="startDateInput">Start Date:</label>
 <input type="date" id="startDateInput" name="startDateInput">
 <label for="endDateInput">End Date:</label>

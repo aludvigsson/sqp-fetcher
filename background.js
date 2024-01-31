@@ -118,6 +118,7 @@ async function fetchData(asin, weekEndDate, marketplace) {
 }
 
 async function fetchAllData(asin, startDate, endDate, marketplace) {
+    allCSVData = []; // Clearing the array for a new ASIN
 
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -145,7 +146,9 @@ async function fetchAllData(asin, startDate, endDate, marketplace) {
             type: "UPDATE_PROGRESS",
             progress: (currentWeek / totalWeeks) * 100,
             currentWeek: currentWeek,
-            totalWeeks: totalWeeks
+            totalWeeks: totalWeeks,
+            ASIN: asin,
+            week: weekEndStr // Use formatted weekEndStr for the week
         });
 
         // Move to the start of the next week

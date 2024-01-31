@@ -1,23 +1,28 @@
 document.getElementById('fetchData').addEventListener('click', function() {
-   const asin = document.getElementById('asinInput').value;
+    const asinInput = document.getElementById('asinInput').value;
+    const asins = asinInput.split(/\s+|,/).filter(asin => asin.trim() !== ''); // Split by whitespace or comma and filter out empty strings
     const startDate = document.getElementById('startDateInput').value;
     const endDate = document.getElementById('endDateInput').value;
     const marketplace = document.getElementById('marketplaceSuffix').innerText;
-    chrome.runtime.sendMessage({action: 'fetchData', asin, startDate, endDate, marketplace});
+
+    asins.forEach(asin => {
+        chrome.runtime.sendMessage({action: 'fetchData', asin: asin.trim(), startDate, endDate, marketplace});
+    });
 });
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "CSV_DATA") {
         downloadCSV(message.payload, message.startDate, message.endDate, message.ASIN);
     }
     if (message.type === 'UPDATE_PROGRESS') {
-        console.log(`Received progress: ${message.progress}%`);
+        console.log(`Received progress for ASIN ${message.ASIN}: ${message.progress}%`);
         const progressBar = document.getElementById("progressBar");
         const progressText = document.getElementById("progressText");
         progressBar.style.width = `${message.progress}%`;
-        progressText.innerText = `Week ${message.currentWeek} of ${message.totalWeeks}`; // Update text
-
+        progressText.innerText = `ASIN ${message.ASIN}: Week ${message.week} - Progress ${message.progress}%`; // Update text with ASIN and week information
     }
 });
+
+
 
 function downloadCSV(csvData, startDate, endDate, ASIN) {
     const blob = new Blob([csvData], { type: 'text/csv' });
