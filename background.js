@@ -33,7 +33,9 @@ const columnMapping = {
     "qp-asin-same-day-shipping-purchases": "Purchases: Same Day Shipping Speed",
     "qp-asin-one-day-shipping-purchases": "Purchases: 1D Shipping Speed",
     "qp-asin-two-day-shipping-purchases": "Purchases: 2D Shipping Speed",
-    "week": "Week"
+    "week": "Week",
+    "asin": "ASIN",
+    "marketplace": "Marketplace"
 };
 
 
@@ -47,10 +49,12 @@ function getWeekNumber(d) {
 const currentWeekNumber = getWeekNumber(new Date());
 const startDate = new Date("2023-01-01");
 
-function jsonToCSV(jsonData, week) {
+function jsonToCSV(jsonData, week, asin, marketplace) {
     const rows = jsonData.reportsV2[0].rows;
     rows.forEach(row => {
         row['week'] = week;
+        row['asin'] = asin;
+        row['marketplace'] = marketplace;
 
         // Wrap 'Search Query' in quotes if it contains a comma
         if (row['qp-asin-query'].includes(',')) {
@@ -110,7 +114,7 @@ async function fetchData(asin, weekEndDate, marketplace) {
     })
         .then(response => response.json())
         .then(data => {
-            jsonToCSV(data, weekEndDate);  // Changed this line
+            jsonToCSV(data, weekEndDate, asin, marketplace);  // Changed this line
         })
         .catch(error => console.error("Fetch or Parsing failed: ", error));
 
