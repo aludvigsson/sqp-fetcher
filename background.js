@@ -50,8 +50,8 @@ const startDate = new Date("2023-01-01");
 
 function jsonToCSV(jsonData, week, asin, marketplace, localCSVData) {
 
-	if (!jsonData || !jsonData.reportsV2 || !jsonData.reportsV2[0] || !jsonData.reportsV2[0].rows) {
-		throw new Error("Invalid data format received from fetch operation.");
+   if (!jsonData || !jsonData.reportsV2 || !jsonData.reportsV2[0] || !jsonData.reportsV2[0].rows) {
+        throw new Error("Invalid data format received from fetch operation.");
     }
 
     const rows = jsonData.reportsV2[0].rows;
@@ -129,20 +129,21 @@ async function fetchData(asin, weekEndDate, marketplace, localCSVData) {
         body: JSON.stringify(payload),
     })
     .then(response => {
-		if (!response.ok) {
-			throw new Error(`HTTP error! status: ${response.status}`);
-		} else {
-			return response.json(); // Only parse as JSON if the response was successful
-		}
-	})
-	.then(data => {
-		jsonToCSV(data, weekEndDate, asin, marketplace, localCSVData);  // Changed this line
-	})
-	.catch(error => {
-		console.error("Fetch or Parsing failed: ", error)
-		chrome.runtime.sendMessage({type: "ERROR", message: "Failed! Make sure you are signed into Amazon Seller Central."});
-		throw new Error("Stopping due to fetch error."); // Propagate the error to stop the workflow
-	});
+	    if (!response.ok) {
+    		throw new Error(`HTTP error! status: ${response.status}`);
+    	} else {
+    		return response.json(); // Only parse as JSON if the response was successful
+    	}
+     })
+     .then(data => {
+        jsonToCSV(data, weekEndDate, asin, marketplace, localCSVData);  // Changed this line
+     })
+     .catch(error => {
+	    console.error("Fetch or Parsing failed: ", error)
+	    chrome.runtime.sendMessage({type: "ERROR", message: "Failed! Make sure you are signed into Amazon Seller Central."});
+	    throw new Error("Stopping due to fetch error."); // Propagate the error to stop the workflow
+      }
+    );
 
     await new Promise(resolve => setTimeout(resolve, Math.random() * 6000 + 1000));
 }
@@ -185,7 +186,6 @@ async function fetchAllData(asin, startDate, endDate, marketplace) {
 			// Move to the start of the next week
 			currentStartDate.setDate(currentStartDate.getDate() + 7);
 		}
-
 
 		const orderedApiNames = Object.keys(columnMapping);
 
