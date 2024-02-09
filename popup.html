@@ -50,11 +50,19 @@
             height: 100%;
             background-color: #4CAF50;
         }
+        #errorMessage {
+		    display: none;
+		    background-color: red;
+		    color: white;
+		    padding: 10px;
+		    border-radius: 5px;
+		    margin-top: 10px;
+		}
     </style>
 </head>
 <body>
 <h1>Amazon SQP Fetcher</h1>
-<p>Keep this window open when the fetching is in progress - Otherwise it will fail.</p>
+<p>NOTE: Keep plugin window or fetching data will fail.</p>
 <label for="asinInput">Enter ASIN(s):</label>
 <textarea id="asinInput" name="asinInput"></textarea>
 <label for="startDateInput">Start Date:</label>
@@ -64,7 +72,11 @@
 <label>Marketplace:</label>
 <span id="marketplaceSuffix">Detecting...</span>
 <br/>
+<label for="singleFileCheckbox">CSV File per ASIN(s):</label>
+<input type="checkbox" id="isSingleFilePerAsin" name="isSingleFilePerAsin" checked>
+<br/>
 <button id="fetchData">Fetch Data</button>
+<div id="errorMessage" style="display: none;"></div>
 <div id="progressWrapper">
     <label for="progressBar">Progress:</label>
     <div id="progressContainer">
