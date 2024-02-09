@@ -1,9 +1,9 @@
 document.addEventListener('DOMContentLoaded', function() {
 
-	// Reset error message
-	const errorMessage = document.getElementById("errorMessage");
-	errorMessage.innerText = "";
-	errorMessage.style.display = "none";
+    // Reset error message
+    const errorMessage = document.getElementById("errorMessage");
+    errorMessage.innerText = "";
+    errorMessage.style.display = "none";
 
     chrome.storage.local.get(['asinInput', 'startDate', 'endDate', 'isSingleFilePerAsin'], function(result) {
         if (result.asinInput) {
@@ -24,26 +24,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
 document.getElementById('fetchData').addEventListener('click', function() {
 
-	// Reset progress message
+    // Reset progress message
     const progressBar = document.getElementById("progressBar");
     const progressText = document.getElementById("progressText");
     progressBar.style.width = `0%`;
     progressText.innerText = "";
+	
+    // Reset error message
+    const errorMessage = document.getElementById("errorMessage");
+    errorMessage.innerText = "";
+    errorMessage.style.display = "none";
 
-	// Reset error message
-	const errorMessage = document.getElementById("errorMessage");
-	errorMessage.innerText = "";
-	errorMessage.style.display = "none";
-
-	// Get user input
+    // Get user input
     const asinInput = document.getElementById('asinInput').value;
     const asins = asinInput.split(/\s+|,/).filter(asin => asin.trim() !== ''); // Split by whitespace or comma and filter out empty strings
     const startDate = document.getElementById('startDateInput').value;
     const endDate = document.getElementById('endDateInput').value;
     const marketplace = document.getElementById('marketplaceSuffix').innerText;
-	const isSingleFilePerAsin = document.getElementById('isSingleFilePerAsin').checked;
+    const isSingleFilePerAsin = document.getElementById('isSingleFilePerAsin').checked;
 
-	// Save to Chrome storage
+    // Save to Chrome storage
     chrome.storage.local.set({ asinInput, startDate, endDate, isSingleFilePerAsin }, function() {
         console.log('SQP Fetcher input data saved');
     });
@@ -52,6 +52,7 @@ document.getElementById('fetchData').addEventListener('click', function() {
         chrome.runtime.sendMessage({action: 'fetchData', asin: asin.trim(), startDate, endDate, marketplace, isSingleFilePerAsin});
     });
 });
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "CSV_DATA") {
         downloadCSV(message.payload, message.startDate, message.endDate, message.ASIN);
@@ -64,24 +65,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         progressText.innerText = `ASIN ${message.ASIN}: Week ${message.week} - Progress ${message.progress}%`; // Update text with ASIN and week information
     }
     if (message.type === "ERROR") {
-		const errorMessage = document.getElementById("errorMessage");
+	const errorMessage = document.getElementById("errorMessage");
     	errorMessage.innerText = message.message;
-	    errorMessage.style.display = "block";
-	    errorMessage.style.backgroundColor = "red";
+	errorMessage.style.display = "block";
+        errorMessage.style.backgroundColor = "red";
     }
 });
-
 
 
 function downloadCSV(csvData, startDate, endDate, ASIN) {
     const blob = new Blob([csvData], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
-
     const filename = `${startDate}-${endDate}-${ASIN}.csv`;
-
-
-
     a.setAttribute('hidden', '');
     a.setAttribute('href', url);
     a.setAttribute('download', filename); // Use the formatted filename
