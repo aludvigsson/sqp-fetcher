@@ -1,4 +1,3 @@
-let allCSVData = [];
 const columnMapping = {
     "qp-asin-query": "Search Query",
     "qp-asin-query-rank": "Search Query Score",
@@ -49,25 +48,42 @@ function getWeekNumber(d) {
 const currentWeekNumber = getWeekNumber(new Date());
 const startDate = new Date("2023-01-01");
 
-function jsonToCSV(jsonData, week, asin, marketplace) {
+function jsonToCSV(jsonData, week, asin, marketplace, localCSVData) {
+
+   if (!jsonData || !jsonData.reportsV2 || !jsonData.reportsV2[0] || !jsonData.reportsV2[0].rows) {
+        throw new Error("Invalid data format received from fetch operation.");
+    }
+
     const rows = jsonData.reportsV2[0].rows;
     rows.forEach(row => {
+        Object.keys(row).forEach(key => {
+            // Replace the field's value with 0 only if it is exactly a dash
+            if (row[key] === '-') {
+                row[key] = '0';
+            }
+        });
+
+        // Update additional data for each row
         row['week'] = week;
         row['asin'] = asin;
         row['marketplace'] = marketplace;
 
-        // Wrap 'Search Query' in quotes if it contains a comma
-        if (row['qp-asin-query'].includes(',')) {
-            row['qp-asin-query'] = `"${row['qp-asin-query']}"`;
+        // Specifically escape the 'Search Query' field for CSV if it contains commas, double quotes, or single quotes
+        if (row['qp-asin-query'] && (row['qp-asin-query'].includes(',') || row['qp-asin-query'].includes('"') || row['qp-asin-query'].includes("'"))) {
+            // Escape double quotes by doubling them, escape single quotes by replacing them with two single quotes (standard SQL way, might vary based on your needs) and wrap the value in double quotes
+            row['qp-asin-query'] = `"${row['qp-asin-query'].replace(/"/g, '""').replace(/'/g, "''")}"`;
         }
     });
 
+    // Sort rows based on 'qp-asin-query-rank'
     rows.sort((a, b) => parseInt(a['qp-asin-query-rank']) - parseInt(b['qp-asin-query-rank']));
-    allCSVData.push(...rows);
+
+    // Accumulate processed rows
+    localCSVData.push(...rows);
 }
 
-async function fetchData(asin, weekEndDate, marketplace) {
-    console.log(marketplace);
+async function fetchData(asin, weekEndDate, marketplace, localCSVData) {
+
     const payload = {
         viewId: "query-performance-asin-view",
         filterSelections: [
@@ -112,68 +128,83 @@ async function fetchData(asin, weekEndDate, marketplace) {
         },
         body: JSON.stringify(payload),
     })
-        .then(response => response.json())
-        .then(data => {
-            jsonToCSV(data, weekEndDate, asin, marketplace);  // Changed this line
-        })
-        .catch(error => console.error("Fetch or Parsing failed: ", error));
+    .then(response => {
+	    if (!response.ok) {
+    		throw new Error(`HTTP error! status: ${response.status}`);
+    	} else {
+    		return response.json(); // Only parse as JSON if the response was successful
+    	}
+     })
+     .then(data => {
+        jsonToCSV(data, weekEndDate, asin, marketplace, localCSVData);  // Changed this line
+     })
+     .catch(error => {
+	    console.error("Fetch or Parsing failed: ", error)
+	    chrome.runtime.sendMessage({type: "ERROR", message: "Failed! Make sure you are signed into Amazon Seller Central."});
+	    throw new Error("Stopping due to fetch error."); // Propagate the error to stop the workflow
+      }
+    );
 
     await new Promise(resolve => setTimeout(resolve, Math.random() * 6000 + 1000));
 }
 
 async function fetchAllData(asin, startDate, endDate, marketplace) {
-    allCSVData = []; // Clearing the array for a new ASIN
+	try {
+		let localCSVData = []; // Clearing the array for a new ASIN
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const totalWeeks = Math.ceil((end - start) / (7 * 24 * 60 * 60 * 1000));
+		const start = new Date(startDate);
+		const end = new Date(endDate);
+		const totalWeeks = Math.ceil((end - start) / (7 * 24 * 60 * 60 * 1000));
 
-    let currentWeek = 0;
-    let currentStartDate = new Date(startDate);
+		let currentWeek = 0;
+		let currentStartDate = new Date(startDate);
 
-    for (let i = 0; i < totalWeeks; i++) {
-        // Calculate the end date of the week (Saturday)
-        const weekEndDate = new Date(currentStartDate);
-        const dayOfWeek = weekEndDate.getDay(); // Sunday = 0, Monday = 1, ..., Saturday = 6
-        const daysToAdd = 6 - dayOfWeek; // Number of days to add to reach Saturday
-        weekEndDate.setDate(currentStartDate.getDate() + daysToAdd);
+		for (let i = 0; i < totalWeeks; i++) {
+			// Calculate the end date of the week (Saturday)
+			const weekEndDate = new Date(currentStartDate);
+			const dayOfWeek = weekEndDate.getDay(); // Sunday = 0, Monday = 1, ..., Saturday = 6
+			const daysToAdd = 6 - dayOfWeek; // Number of days to add to reach Saturday
+			weekEndDate.setDate(currentStartDate.getDate() + daysToAdd);
 
-        // Format the week's end date into a string
-        const weekEndStr = `${weekEndDate.getFullYear()}-${String(weekEndDate.getMonth() + 1).padStart(2, '0')}-${String(weekEndDate.getDate()).padStart(2, '0')}`;
+			// Format the week's end date into a string
+			const weekEndStr = `${weekEndDate.getFullYear()}-${String(weekEndDate.getMonth() + 1).padStart(2, '0')}-${String(weekEndDate.getDate()).padStart(2, '0')}`;
 
-        // Fetch data for the week
-        await fetchData(asin, weekEndStr, marketplace);
+			// Fetch data for the week
+			await fetchData(asin, weekEndStr, marketplace, localCSVData);
 
-        // Update progress
-        currentWeek++;
-        chrome.runtime.sendMessage({
-            type: "UPDATE_PROGRESS",
-            progress: (currentWeek / totalWeeks) * 100,
-            currentWeek: currentWeek,
-            totalWeeks: totalWeeks,
-            ASIN: asin,
-            week: weekEndStr // Use formatted weekEndStr for the week
-        });
+			// Update progress
+			currentWeek++;
+			chrome.runtime.sendMessage({
+				type: "UPDATE_PROGRESS",
+				progress: (currentWeek / totalWeeks) * 100,
+				currentWeek: currentWeek,
+				totalWeeks: totalWeeks,
+				ASIN: asin,
+				week: weekEndStr // Use formatted weekEndStr for the week
+			});
 
-        // Move to the start of the next week
-        currentStartDate.setDate(currentStartDate.getDate() + 7);
+			// Move to the start of the next week
+			currentStartDate.setDate(currentStartDate.getDate() + 7);
+		}
+
+		const orderedApiNames = Object.keys(columnMapping);
+
+		// Use the ordered API names to rearrange each row
+		const reorderedRows = localCSVData.map(row => {
+			return orderedApiNames.map(name => row[name] || '').join(',');
+		});
+
+		// Use the real header names in the CSV
+		const realHeaderNames = Object.values(columnMapping).join(',');
+		reorderedRows.unshift(realHeaderNames);
+
+		const csvData = reorderedRows.join('\n');
+		chrome.runtime.sendMessage({type: "CSV_DATA", payload: csvData, startDate: startDate, endDate: endDate, ASIN: asin});
+	} catch (error) {
+        console.error("Operation stopped: ", error.message);
+        // Optionally, send a message to the UI to update the user
+        return; // Exit the function early to stop further processing
     }
-
-
-    const orderedApiNames = Object.keys(columnMapping);
-
-    // Use the ordered API names to rearrange each row
-    const reorderedRows = allCSVData.map(row => {
-        return orderedApiNames.map(name => row[name] || '').join(',');
-    });
-
-    // Use the real header names in the CSV
-    const realHeaderNames = Object.values(columnMapping).join(',');
-    reorderedRows.unshift(realHeaderNames);
-
-    const csvData = reorderedRows.join('\n');
-    chrome.runtime.sendMessage({type: "CSV_DATA", payload: csvData, startDate: startDate, endDate: endDate, ASIN: asin});
-
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
